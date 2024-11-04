@@ -36,8 +36,9 @@ type BaseEvent struct {
 // NewBaseEvent creates a new instance of BaseEvent with a payload
 func NewBaseEvent(topic string, payload interface{}) *BaseEvent {
 	return &BaseEvent{
-		topic:   topic,
-		payload: payload,
+		topic:      topic,
+		payload:    payload,
+		properties: Properties{},
 	}
 }
 
