@@ -25,15 +25,15 @@ func NewEntEvent(topic string, payload interface{}) *EntEvent {
 func EmitEventHook(pool *soiree.EventPool) ent.Hook {
 	return func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, mutation ent.Mutation) (ent.Value, error) {
-			retVal, err := next.Mutate(ctx, mutation)
-			if err != nil {
-				return nil, err
-			}
+			//			_, err := next.Mutate(ctx, mutation)
+			//			if err != nil {
+			//				return nil, err
+			//			}
 
 			op := mutation.Op()
 			typ := mutation.Type()
 
-			fields := mutation.Fields()
+			fields := mutation.AddedFields()
 
 			event := NewEntEvent(fmt.Sprintf("%s.%s", typ, op), mutation)
 			for _, field := range fields {
@@ -49,7 +49,7 @@ func EmitEventHook(pool *soiree.EventPool) ent.Hook {
 			log.Info().Msgf("Emitted event: %s", event.Topic())
 			log.Info().Msgf("Event properties: %v", event.Properties())
 
-			return retVal, err
+			return next.Mutate(ctx, mutation)
 		})
 	}
 }
