@@ -454,3 +454,11 @@ func WithObjectStorage() ServerOption {
 		}
 	})
 }
+
+func WithEntitlements() ServerOption {
+	return newApplyFunc(func(s *ServerOptions) {
+		if s.Config.Settings.Entitlements.Enabled {
+
+		}
+	})
+}
