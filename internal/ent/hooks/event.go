@@ -95,7 +95,10 @@ func InitEventPool() *soiree.EventPool {
 }
 
 const (
-	OrganizationCreated = "Organization.OpCreate"
+	OrganizationCreated          = "Organization.OpCreate"
+	OrganizationSettingCreated   = "OrganizationSetting.OpCreate"
+	OrganizationSettingUpdated   = "OrganizationSetting.OpUpdate"
+	OrganizationSettingUpdateOne = "OrganizationSetting.OpUpdateOne"
 )
 
 func RegisterListeners(pool *soiree.EventPool) {
@@ -104,20 +107,40 @@ func RegisterListeners(pool *soiree.EventPool) {
 		log.Err(err).Msgf("Failed to register listener for event: %s", id)
 	}
 
-	log.Info().Msgf("Registered listener for event: %s", id)
 	log.Info().Msgf("Registered listener for event type: %s", OrganizationCreated)
+
+	id, err = pool.On(OrganizationSettingCreated, handleCustomerCreate)
+	if err != nil {
+		log.Err(err).Msgf("Failed to register listener for event: %s", id)
+	}
+
+	log.Info().Msgf("Registered listener for event type: %s", OrganizationSettingCreated)
+
+	id, err = pool.On(OrganizationSettingUpdated, handleCustomerCreate)
+	if err != nil {
+		log.Err(err).Msgf("Failed to register listener for event: %s", id)
+	}
+
+	log.Info().Msgf("Registered listener for event type: %s", OrganizationSettingUpdated)
+
+	id, err = pool.On(OrganizationSettingUpdateOne, handleCustomerCreate)
+	if err != nil {
+		log.Err(err).Msgf("Failed to register listener for event: %s", id)
+	}
+
+	log.Info().Msgf("Registered listener for event type: %s", OrganizationSettingUpdateOne)
 }
 
 func handleCustomerCreate(event soiree.Event) error {
 	log.Info().Msg("Handling organization create event")
 
-	stripe.Key = "sk_test_4eC39HqLyjWDarjtT1zdp7dc"
+	stripe.Key = ""
 
 	props := event.Properties()
 	// this map is empty?
 	log.Info().Msgf("Event properties from listener: %v", props)
 
-	billingEmail, exists := props["description"]
+	billingEmail, exists := props["billing_email"]
 	if exists && billingEmail != "" {
 		log.Info().Msgf("Billing email: %s", billingEmail)
 		email := billingEmail.(string)
@@ -128,7 +151,7 @@ func handleCustomerCreate(event soiree.Event) error {
 		i := scust.List(customerParams)
 
 		if !i.Next() {
-			// Customer does not exist, create a new one
+			log.Info().Msgf("Attmpting to create Stripe customer with email %s", email)
 			customerParams := &stripe.CustomerParams{
 				Email: &email,
 			}
@@ -138,14 +161,16 @@ func handleCustomerCreate(event soiree.Event) error {
 				log.Err(err).Msg("Failed to create Stripe customer")
 				return err
 			}
+
+			log.Info().Msgf("Created Stripe customer with ID: %s", customer.ID)
 			// Store the Stripe customer ID in the OrganizationSetting record
-			orgID := props["ID"].(string)
+			//			orgID := props["ID"].(string)
 			// Assuming you have a function to update the OrganizationSetting record
-			err = updateOrganizationSettingWithCustomerID(orgID, customer.ID)
-			if err != nil {
-				log.Err(err).Msg("Failed to update OrganizationSetting with Stripe customer ID")
-				return err
-			}
+			//			err = updateOrganizationSettingWithCustomerID(orgID, customer.ID)
+			//			if err != nil {
+			//				log.Err(err).Msg("Failed to update OrganizationSetting with Stripe customer ID")
+			//				return err
+			//			}
 		}
 	}
 

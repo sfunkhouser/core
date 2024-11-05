@@ -72,6 +72,10 @@ func (e *BaseEvent) Properties() Properties {
 
 // SetProperties sets the event's properties
 func (e *BaseEvent) SetProperties(properties Properties) {
+	if properties == nil {
+		properties = NewProperties()
+	}
+
 	e.mu.Lock() // Write lock
 	defer e.mu.Unlock()
 	e.properties = properties
@@ -97,11 +101,27 @@ type Properties map[string]interface{}
 
 // NewProperties creates a new Properties map
 func NewProperties() Properties {
-	return make(Properties, 10) //nolint:mnd
+	return make(Properties)
 }
 
 // Set a property on the Properties map
 func (p Properties) Set(name string, value interface{}) Properties {
+	if p == nil {
+		p = NewProperties()
+	}
+
 	p[name] = value
+
 	return p
+}
+
+// Get a property from the Properties map
+func (p Properties) GetKey(key string) interface{} {
+	value := p[key]
+
+	if value == nil || value == "" {
+		return nil
+	}
+
+	return value
 }
