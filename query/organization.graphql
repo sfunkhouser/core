@@ -121,6 +121,7 @@ query GetAllOrganizations {
           taxIdentifier
           geoLocation
           tags
+          stripe_id
         }
         createdAt
         updatedAt
@@ -174,6 +175,7 @@ query GetOrganizationByID($organizationId: ID!) {
       taxIdentifier
       geoLocation
       tags
+      stripe_id
     }
     createdAt
     createdBy
