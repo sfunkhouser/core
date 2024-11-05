@@ -126,7 +126,10 @@ func (m *EventPool) handleEvents(topicName string, payload interface{}, errorHan
 		}
 	}()
 
-	event := NewBaseEvent(topicName, payload)
+	event, ok := payload.(Event)
+	if !ok {
+		m.panicHandler(fmt.Errorf("payload is not an event"))
+	}
 
 	m.topics.Range(func(key, value interface{}) bool {
 		topicPattern := key.(string)
