@@ -19,7 +19,7 @@ query GetAllOrganizationSettings {
           id
           name
         }
-        stripe_id
+        stripeID
       }
     }
   }
@@ -44,7 +44,7 @@ query GetOrganizationSettingByID($organizationSettingId: ID!) {
       id
       name
     }
-    stripe_id
+    stripeID
   }
 }
 
@@ -69,7 +69,7 @@ query GetOrganizationSettings($where: OrganizationSettingWhereInput!) {
           id
           name
         }
-        stripe_id
+        stripeID
       }
     }
   }
@@ -95,7 +95,7 @@ mutation UpdateOrganizationSetting($updateOrganizationSettingId: ID!, $input: Up
         id
         name
       }
-      stripe_id
+      stripeID
     }
   }
 }
