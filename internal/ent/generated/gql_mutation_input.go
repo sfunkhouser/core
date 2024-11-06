@@ -3501,6 +3501,7 @@ type CreateOrganizationSettingInput struct {
 	BillingAddress *string
 	TaxIdentifier  *string
 	GeoLocation    *enums.Region
+	StripeID       *string
 	OrganizationID *string
 	FileIDs        []string
 }
@@ -3530,6 +3531,9 @@ func (i *CreateOrganizationSettingInput) Mutate(m *OrganizationSettingMutation) 
 	}
 	if v := i.GeoLocation; v != nil {
 		m.SetGeoLocation(*v)
+	}
+	if v := i.StripeID; v != nil {
+		m.SetStripeID(*v)
 	}
 	if v := i.OrganizationID; v != nil {
 		m.SetOrganizationID(*v)
@@ -3565,6 +3569,8 @@ type UpdateOrganizationSettingInput struct {
 	TaxIdentifier       *string
 	ClearGeoLocation    bool
 	GeoLocation         *enums.Region
+	ClearStripeID       bool
+	StripeID            *string
 	ClearOrganization   bool
 	OrganizationID      *string
 	ClearFiles          bool
@@ -3627,6 +3633,12 @@ func (i *UpdateOrganizationSettingInput) Mutate(m *OrganizationSettingMutation) 
 	}
 	if v := i.GeoLocation; v != nil {
 		m.SetGeoLocation(*v)
+	}
+	if i.ClearStripeID {
+		m.ClearStripeID()
+	}
+	if v := i.StripeID; v != nil {
+		m.SetStripeID(*v)
 	}
 	if i.ClearOrganization {
 		m.ClearOrganization()

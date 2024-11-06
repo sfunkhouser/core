@@ -1344,9 +1344,11 @@ type CreateOrganizationSettingInput struct {
 	// Usually government-issued tax ID or business ID such as ABN in Australia
 	TaxIdentifier *string `json:"taxIdentifier,omitempty"`
 	// geographical location of the organization
-	GeoLocation    *enums.Region `json:"geoLocation,omitempty"`
-	OrganizationID *string       `json:"organizationID,omitempty"`
-	FileIDs        []string      `json:"fileIDs,omitempty"`
+	GeoLocation *enums.Region `json:"geoLocation,omitempty"`
+	// the ID of the stripe customer associated with the organization
+	StripeID       *string  `json:"stripeID,omitempty"`
+	OrganizationID *string  `json:"organizationID,omitempty"`
+	FileIDs        []string `json:"fileIDs,omitempty"`
 }
 
 // CreatePersonalAccessTokenInput is used for create PersonalAccessToken object.
@@ -10478,9 +10480,11 @@ type OrganizationSetting struct {
 	// geographical location of the organization
 	GeoLocation *enums.Region `json:"geoLocation,omitempty"`
 	// the ID of the organization the settings belong to
-	OrganizationID *string       `json:"organizationID,omitempty"`
-	Organization   *Organization `json:"organization,omitempty"`
-	Files          []*File       `json:"files,omitempty"`
+	OrganizationID *string `json:"organizationID,omitempty"`
+	// the ID of the stripe customer associated with the organization
+	StripeID     *string       `json:"stripeID,omitempty"`
+	Organization *Organization `json:"organization,omitempty"`
+	Files        []*File       `json:"files,omitempty"`
 }
 
 func (OrganizationSetting) IsNode() {}
@@ -10550,6 +10554,8 @@ type OrganizationSettingHistory struct {
 	GeoLocation *enums.Region `json:"geoLocation,omitempty"`
 	// the ID of the organization the settings belong to
 	OrganizationID *string `json:"organizationID,omitempty"`
+	// the ID of the stripe customer associated with the organization
+	StripeID *string `json:"stripeID,omitempty"`
 }
 
 func (OrganizationSettingHistory) IsNode() {}
@@ -10803,6 +10809,22 @@ type OrganizationSettingHistoryWhereInput struct {
 	OrganizationIDNotNil       *bool    `json:"organizationIDNotNil,omitempty"`
 	OrganizationIDEqualFold    *string  `json:"organizationIDEqualFold,omitempty"`
 	OrganizationIDContainsFold *string  `json:"organizationIDContainsFold,omitempty"`
+	// stripe_id field predicates
+	StripeID             *string  `json:"stripeID,omitempty"`
+	StripeIdneq          *string  `json:"stripeIDNEQ,omitempty"`
+	StripeIDIn           []string `json:"stripeIDIn,omitempty"`
+	StripeIDNotIn        []string `json:"stripeIDNotIn,omitempty"`
+	StripeIdgt           *string  `json:"stripeIDGT,omitempty"`
+	StripeIdgte          *string  `json:"stripeIDGTE,omitempty"`
+	StripeIdlt           *string  `json:"stripeIDLT,omitempty"`
+	StripeIdlte          *string  `json:"stripeIDLTE,omitempty"`
+	StripeIDContains     *string  `json:"stripeIDContains,omitempty"`
+	StripeIDHasPrefix    *string  `json:"stripeIDHasPrefix,omitempty"`
+	StripeIDHasSuffix    *string  `json:"stripeIDHasSuffix,omitempty"`
+	StripeIDIsNil        *bool    `json:"stripeIDIsNil,omitempty"`
+	StripeIDNotNil       *bool    `json:"stripeIDNotNil,omitempty"`
+	StripeIDEqualFold    *string  `json:"stripeIDEqualFold,omitempty"`
+	StripeIDContainsFold *string  `json:"stripeIDContainsFold,omitempty"`
 }
 
 type OrganizationSettingSearchResult struct {
@@ -11018,6 +11040,22 @@ type OrganizationSettingWhereInput struct {
 	OrganizationIDNotNil       *bool    `json:"organizationIDNotNil,omitempty"`
 	OrganizationIDEqualFold    *string  `json:"organizationIDEqualFold,omitempty"`
 	OrganizationIDContainsFold *string  `json:"organizationIDContainsFold,omitempty"`
+	// stripe_id field predicates
+	StripeID             *string  `json:"stripeID,omitempty"`
+	StripeIdneq          *string  `json:"stripeIDNEQ,omitempty"`
+	StripeIDIn           []string `json:"stripeIDIn,omitempty"`
+	StripeIDNotIn        []string `json:"stripeIDNotIn,omitempty"`
+	StripeIdgt           *string  `json:"stripeIDGT,omitempty"`
+	StripeIdgte          *string  `json:"stripeIDGTE,omitempty"`
+	StripeIdlt           *string  `json:"stripeIDLT,omitempty"`
+	StripeIdlte          *string  `json:"stripeIDLTE,omitempty"`
+	StripeIDContains     *string  `json:"stripeIDContains,omitempty"`
+	StripeIDHasPrefix    *string  `json:"stripeIDHasPrefix,omitempty"`
+	StripeIDHasSuffix    *string  `json:"stripeIDHasSuffix,omitempty"`
+	StripeIDIsNil        *bool    `json:"stripeIDIsNil,omitempty"`
+	StripeIDNotNil       *bool    `json:"stripeIDNotNil,omitempty"`
+	StripeIDEqualFold    *string  `json:"stripeIDEqualFold,omitempty"`
+	StripeIDContainsFold *string  `json:"stripeIDContainsFold,omitempty"`
 	// organization edge predicates
 	HasOrganization     *bool                     `json:"hasOrganization,omitempty"`
 	HasOrganizationWith []*OrganizationWhereInput `json:"hasOrganizationWith,omitempty"`
@@ -13116,13 +13154,16 @@ type UpdateOrganizationSettingInput struct {
 	TaxIdentifier      *string `json:"taxIdentifier,omitempty"`
 	ClearTaxIdentifier *bool   `json:"clearTaxIdentifier,omitempty"`
 	// geographical location of the organization
-	GeoLocation       *enums.Region `json:"geoLocation,omitempty"`
-	ClearGeoLocation  *bool         `json:"clearGeoLocation,omitempty"`
-	OrganizationID    *string       `json:"organizationID,omitempty"`
-	ClearOrganization *bool         `json:"clearOrganization,omitempty"`
-	AddFileIDs        []string      `json:"addFileIDs,omitempty"`
-	RemoveFileIDs     []string      `json:"removeFileIDs,omitempty"`
-	ClearFiles        *bool         `json:"clearFiles,omitempty"`
+	GeoLocation      *enums.Region `json:"geoLocation,omitempty"`
+	ClearGeoLocation *bool         `json:"clearGeoLocation,omitempty"`
+	// the ID of the stripe customer associated with the organization
+	StripeID          *string  `json:"stripeID,omitempty"`
+	ClearStripeID     *bool    `json:"clearStripeID,omitempty"`
+	OrganizationID    *string  `json:"organizationID,omitempty"`
+	ClearOrganization *bool    `json:"clearOrganization,omitempty"`
+	AddFileIDs        []string `json:"addFileIDs,omitempty"`
+	RemoveFileIDs     []string `json:"removeFileIDs,omitempty"`
+	ClearFiles        *bool    `json:"clearFiles,omitempty"`
 }
 
 // UpdatePersonalAccessTokenInput is used for update PersonalAccessToken object.

@@ -1386,6 +1386,9 @@ func (osh *OrganizationSettingHistory) changes(new *OrganizationSettingHistory) 
 	if !reflect.DeepEqual(osh.OrganizationID, new.OrganizationID) {
 		changes = append(changes, NewChange(organizationsettinghistory.FieldOrganizationID, osh.OrganizationID, new.OrganizationID))
 	}
+	if !reflect.DeepEqual(osh.StripeID, new.StripeID) {
+		changes = append(changes, NewChange(organizationsettinghistory.FieldStripeID, osh.StripeID, new.StripeID))
+	}
 	return changes
 }
 

@@ -63566,6 +63566,7 @@ type OrganizationSettingMutation struct {
 	billing_address     *string
 	tax_identifier      *string
 	geo_location        *enums.Region
+	stripe_id           *string
 	clearedFields       map[string]struct{}
 	organization        *string
 	clearedorganization bool
@@ -64484,6 +64485,55 @@ func (m *OrganizationSettingMutation) ResetOrganizationID() {
 	delete(m.clearedFields, organizationsetting.FieldOrganizationID)
 }
 
+// SetStripeID sets the "stripe_id" field.
+func (m *OrganizationSettingMutation) SetStripeID(s string) {
+	m.stripe_id = &s
+}
+
+// StripeID returns the value of the "stripe_id" field in the mutation.
+func (m *OrganizationSettingMutation) StripeID() (r string, exists bool) {
+	v := m.stripe_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStripeID returns the old "stripe_id" field's value of the OrganizationSetting entity.
+// If the OrganizationSetting object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrganizationSettingMutation) OldStripeID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStripeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStripeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStripeID: %w", err)
+	}
+	return oldValue.StripeID, nil
+}
+
+// ClearStripeID clears the value of the "stripe_id" field.
+func (m *OrganizationSettingMutation) ClearStripeID() {
+	m.stripe_id = nil
+	m.clearedFields[organizationsetting.FieldStripeID] = struct{}{}
+}
+
+// StripeIDCleared returns if the "stripe_id" field was cleared in this mutation.
+func (m *OrganizationSettingMutation) StripeIDCleared() bool {
+	_, ok := m.clearedFields[organizationsetting.FieldStripeID]
+	return ok
+}
+
+// ResetStripeID resets all changes to the "stripe_id" field.
+func (m *OrganizationSettingMutation) ResetStripeID() {
+	m.stripe_id = nil
+	delete(m.clearedFields, organizationsetting.FieldStripeID)
+}
+
 // ClearOrganization clears the "organization" edge to the Organization entity.
 func (m *OrganizationSettingMutation) ClearOrganization() {
 	m.clearedorganization = true
@@ -64599,7 +64649,7 @@ func (m *OrganizationSettingMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OrganizationSettingMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.created_at != nil {
 		fields = append(fields, organizationsetting.FieldCreatedAt)
 	}
@@ -64648,6 +64698,9 @@ func (m *OrganizationSettingMutation) Fields() []string {
 	if m.organization != nil {
 		fields = append(fields, organizationsetting.FieldOrganizationID)
 	}
+	if m.stripe_id != nil {
+		fields = append(fields, organizationsetting.FieldStripeID)
+	}
 	return fields
 }
 
@@ -64688,6 +64741,8 @@ func (m *OrganizationSettingMutation) Field(name string) (ent.Value, bool) {
 		return m.GeoLocation()
 	case organizationsetting.FieldOrganizationID:
 		return m.OrganizationID()
+	case organizationsetting.FieldStripeID:
+		return m.StripeID()
 	}
 	return nil, false
 }
@@ -64729,6 +64784,8 @@ func (m *OrganizationSettingMutation) OldField(ctx context.Context, name string)
 		return m.OldGeoLocation(ctx)
 	case organizationsetting.FieldOrganizationID:
 		return m.OldOrganizationID(ctx)
+	case organizationsetting.FieldStripeID:
+		return m.OldStripeID(ctx)
 	}
 	return nil, fmt.Errorf("unknown OrganizationSetting field %s", name)
 }
@@ -64850,6 +64907,13 @@ func (m *OrganizationSettingMutation) SetField(name string, value ent.Value) err
 		}
 		m.SetOrganizationID(v)
 		return nil
+	case organizationsetting.FieldStripeID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStripeID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown OrganizationSetting field %s", name)
 }
@@ -64925,6 +64989,9 @@ func (m *OrganizationSettingMutation) ClearedFields() []string {
 	if m.FieldCleared(organizationsetting.FieldOrganizationID) {
 		fields = append(fields, organizationsetting.FieldOrganizationID)
 	}
+	if m.FieldCleared(organizationsetting.FieldStripeID) {
+		fields = append(fields, organizationsetting.FieldStripeID)
+	}
 	return fields
 }
 
@@ -64984,6 +65051,9 @@ func (m *OrganizationSettingMutation) ClearField(name string) error {
 	case organizationsetting.FieldOrganizationID:
 		m.ClearOrganizationID()
 		return nil
+	case organizationsetting.FieldStripeID:
+		m.ClearStripeID()
+		return nil
 	}
 	return fmt.Errorf("unknown OrganizationSetting nullable field %s", name)
 }
@@ -65039,6 +65109,9 @@ func (m *OrganizationSettingMutation) ResetField(name string) error {
 		return nil
 	case organizationsetting.FieldOrganizationID:
 		m.ResetOrganizationID()
+		return nil
+	case organizationsetting.FieldStripeID:
+		m.ResetStripeID()
 		return nil
 	}
 	return fmt.Errorf("unknown OrganizationSetting field %s", name)
@@ -65173,6 +65246,7 @@ type OrganizationSettingHistoryMutation struct {
 	tax_identifier  *string
 	geo_location    *enums.Region
 	organization_id *string
+	stripe_id       *string
 	clearedFields   map[string]struct{}
 	done            bool
 	oldValue        func(context.Context) (*OrganizationSettingHistory, error)
@@ -66207,6 +66281,55 @@ func (m *OrganizationSettingHistoryMutation) ResetOrganizationID() {
 	delete(m.clearedFields, organizationsettinghistory.FieldOrganizationID)
 }
 
+// SetStripeID sets the "stripe_id" field.
+func (m *OrganizationSettingHistoryMutation) SetStripeID(s string) {
+	m.stripe_id = &s
+}
+
+// StripeID returns the value of the "stripe_id" field in the mutation.
+func (m *OrganizationSettingHistoryMutation) StripeID() (r string, exists bool) {
+	v := m.stripe_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStripeID returns the old "stripe_id" field's value of the OrganizationSettingHistory entity.
+// If the OrganizationSettingHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrganizationSettingHistoryMutation) OldStripeID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStripeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStripeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStripeID: %w", err)
+	}
+	return oldValue.StripeID, nil
+}
+
+// ClearStripeID clears the value of the "stripe_id" field.
+func (m *OrganizationSettingHistoryMutation) ClearStripeID() {
+	m.stripe_id = nil
+	m.clearedFields[organizationsettinghistory.FieldStripeID] = struct{}{}
+}
+
+// StripeIDCleared returns if the "stripe_id" field was cleared in this mutation.
+func (m *OrganizationSettingHistoryMutation) StripeIDCleared() bool {
+	_, ok := m.clearedFields[organizationsettinghistory.FieldStripeID]
+	return ok
+}
+
+// ResetStripeID resets all changes to the "stripe_id" field.
+func (m *OrganizationSettingHistoryMutation) ResetStripeID() {
+	m.stripe_id = nil
+	delete(m.clearedFields, organizationsettinghistory.FieldStripeID)
+}
+
 // Where appends a list predicates to the OrganizationSettingHistoryMutation builder.
 func (m *OrganizationSettingHistoryMutation) Where(ps ...predicate.OrganizationSettingHistory) {
 	m.predicates = append(m.predicates, ps...)
@@ -66241,7 +66364,7 @@ func (m *OrganizationSettingHistoryMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OrganizationSettingHistoryMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.history_time != nil {
 		fields = append(fields, organizationsettinghistory.FieldHistoryTime)
 	}
@@ -66299,6 +66422,9 @@ func (m *OrganizationSettingHistoryMutation) Fields() []string {
 	if m.organization_id != nil {
 		fields = append(fields, organizationsettinghistory.FieldOrganizationID)
 	}
+	if m.stripe_id != nil {
+		fields = append(fields, organizationsettinghistory.FieldStripeID)
+	}
 	return fields
 }
 
@@ -66345,6 +66471,8 @@ func (m *OrganizationSettingHistoryMutation) Field(name string) (ent.Value, bool
 		return m.GeoLocation()
 	case organizationsettinghistory.FieldOrganizationID:
 		return m.OrganizationID()
+	case organizationsettinghistory.FieldStripeID:
+		return m.StripeID()
 	}
 	return nil, false
 }
@@ -66392,6 +66520,8 @@ func (m *OrganizationSettingHistoryMutation) OldField(ctx context.Context, name 
 		return m.OldGeoLocation(ctx)
 	case organizationsettinghistory.FieldOrganizationID:
 		return m.OldOrganizationID(ctx)
+	case organizationsettinghistory.FieldStripeID:
+		return m.OldStripeID(ctx)
 	}
 	return nil, fmt.Errorf("unknown OrganizationSettingHistory field %s", name)
 }
@@ -66534,6 +66664,13 @@ func (m *OrganizationSettingHistoryMutation) SetField(name string, value ent.Val
 		}
 		m.SetOrganizationID(v)
 		return nil
+	case organizationsettinghistory.FieldStripeID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStripeID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown OrganizationSettingHistory field %s", name)
 }
@@ -66612,6 +66749,9 @@ func (m *OrganizationSettingHistoryMutation) ClearedFields() []string {
 	if m.FieldCleared(organizationsettinghistory.FieldOrganizationID) {
 		fields = append(fields, organizationsettinghistory.FieldOrganizationID)
 	}
+	if m.FieldCleared(organizationsettinghistory.FieldStripeID) {
+		fields = append(fields, organizationsettinghistory.FieldStripeID)
+	}
 	return fields
 }
 
@@ -66673,6 +66813,9 @@ func (m *OrganizationSettingHistoryMutation) ClearField(name string) error {
 		return nil
 	case organizationsettinghistory.FieldOrganizationID:
 		m.ClearOrganizationID()
+		return nil
+	case organizationsettinghistory.FieldStripeID:
+		m.ClearStripeID()
 		return nil
 	}
 	return fmt.Errorf("unknown OrganizationSettingHistory nullable field %s", name)
@@ -66738,6 +66881,9 @@ func (m *OrganizationSettingHistoryMutation) ResetField(name string) error {
 		return nil
 	case organizationsettinghistory.FieldOrganizationID:
 		m.ResetOrganizationID()
+		return nil
+	case organizationsettinghistory.FieldStripeID:
+		m.ResetStripeID()
 		return nil
 	}
 	return fmt.Errorf("unknown OrganizationSettingHistory field %s", name)

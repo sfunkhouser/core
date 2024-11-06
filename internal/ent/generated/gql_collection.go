@@ -7431,6 +7431,11 @@ func (os *OrganizationSettingQuery) collectField(ctx context.Context, oneNode bo
 				selectedFields = append(selectedFields, organizationsetting.FieldOrganizationID)
 				fieldSeen[organizationsetting.FieldOrganizationID] = struct{}{}
 			}
+		case "stripeID":
+			if _, ok := fieldSeen[organizationsetting.FieldStripeID]; !ok {
+				selectedFields = append(selectedFields, organizationsetting.FieldStripeID)
+				fieldSeen[organizationsetting.FieldStripeID] = struct{}{}
+			}
 		case "id":
 		case "__typename":
 		default:
@@ -7582,6 +7587,11 @@ func (osh *OrganizationSettingHistoryQuery) collectField(ctx context.Context, on
 			if _, ok := fieldSeen[organizationsettinghistory.FieldOrganizationID]; !ok {
 				selectedFields = append(selectedFields, organizationsettinghistory.FieldOrganizationID)
 				fieldSeen[organizationsettinghistory.FieldOrganizationID] = struct{}{}
+			}
+		case "stripeID":
+			if _, ok := fieldSeen[organizationsettinghistory.FieldStripeID]; !ok {
+				selectedFields = append(selectedFields, organizationsettinghistory.FieldStripeID)
+				fieldSeen[organizationsettinghistory.FieldStripeID] = struct{}{}
 			}
 		case "id":
 		case "__typename":
