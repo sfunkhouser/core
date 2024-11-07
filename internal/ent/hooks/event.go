@@ -63,7 +63,7 @@ func EmitEventHook(pool *soiree.EventPool) ent.Hook {
 				log.Info().Msgf("Field: %s, Value: %v", field, value)
 			}
 
-			event.SetContext(ctx)
+			event.SetContext(context.WithoutCancel(ctx))
 
 			pool.Emit(event.Topic(), event)
 			log.Info().Msgf("Emitted event: %s", event.Topic())
@@ -162,7 +162,8 @@ func handleCustomerCreate(event soiree.Event) error {
 		i := scust.List(customerParams)
 
 		if !i.Next() {
-			log.Info().Msgf("Attmpting to create Stripe customer with email %s", email)
+			log.Info().Msgf("Attempting to create Stripe customer with email %s", email)
+
 			customerParams := &stripe.CustomerParams{
 				Email: &email,
 			}
@@ -175,7 +176,7 @@ func handleCustomerCreate(event soiree.Event) error {
 
 			log.Info().Msgf("Created Stripe customer with ID: %s", customer.ID)
 
-			if err := updateOrganizationSettingWithCustomerID(orgsettingID.(string), customer.ID, entgen.FromContext(event.Context())); err != nil {
+			if err := updateOrganizationSettingWithCustomerID(event.Context(), orgsettingID.(string), customer.ID); err != nil {
 				log.Err(err).Msg("Failed to update OrganizationSetting with Stripe customer ID")
 				return err
 			}
@@ -189,10 +190,10 @@ func handleCustomerCreate(event soiree.Event) error {
 	return nil
 }
 
-func updateOrganizationSettingWithCustomerID(orgID, customerID string, dbclient *entgen.Client) error {
-	_, err := dbclient.OrganizationSetting.UpdateOneID(orgID).SetStripeID(customerID).Save(context.Background())
-	if err != nil {
+func updateOrganizationSettingWithCustomerID(ctx context.Context, orgID, customerID string) error {
+	if _, err := entgen.FromContext(ctx).OrganizationSetting.UpdateOneID(orgID).SetStripeID(customerID).Save(ctx); err != nil {
 		log.Err(err).Msgf("Failed to update OrganizationSetting ID %s with Stripe customer ID %s", orgID, customerID)
+
 		return err
 	}
 
