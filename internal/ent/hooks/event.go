@@ -63,6 +63,8 @@ func EmitEventHook(pool *soiree.EventPool) ent.Hook {
 				log.Info().Msgf("Field: %s, Value: %v", field, value)
 			}
 
+			event.SetContext(ctx)
+
 			pool.Emit(event.Topic(), event)
 			log.Info().Msgf("Emitted event: %s", event.Topic())
 			log.Info().Msgf("Event properties: %v", event.Properties())
@@ -140,7 +142,16 @@ func handleCustomerCreate(event soiree.Event) error {
 	// this map is empty?
 	log.Info().Msgf("Event properties from listener: %v", props)
 
+	orgsettingID, exists := props["ID"]
+	if !exists {
+		log.Info().Msg("OrganizationSetting ID not found in event properties")
+		return nil
+	}
+
+	log.Info().Msgf("OrganizationSetting ID: %s", orgsettingID)
+
 	billingEmail, exists := props["billing_email"]
+
 	if exists && billingEmail != "" {
 		log.Info().Msgf("Billing email: %s", billingEmail)
 		email := billingEmail.(string)
@@ -163,24 +174,23 @@ func handleCustomerCreate(event soiree.Event) error {
 			}
 
 			log.Info().Msgf("Created Stripe customer with ID: %s", customer.ID)
-			// Store the Stripe customer ID in the OrganizationSetting record
-			//			orgID := props["ID"].(string)
-			// Assuming you have a function to update the OrganizationSetting record
-			//			err = updateOrganizationSettingWithCustomerID(orgID, customer.ID)
-			//			if err != nil {
-			//				log.Err(err).Msg("Failed to update OrganizationSetting with Stripe customer ID")
-			//				return err
-			//			}
+
+			if err := updateOrganizationSettingWithCustomerID(orgsettingID.(string), customer.ID, entgen.FromContext(event.Context())); err != nil {
+				log.Err(err).Msg("Failed to update OrganizationSetting with Stripe customer ID")
+				return err
+			}
+
+			log.Info().Msgf("Updated OrganizationSetting with Stripe customer ID: %s", customer.ID)
 		}
+
+		log.Info().Msgf("Stripe customer with email %s already exists", email)
 	}
 
 	return nil
 }
 
-// Add this function to update the OrganizationSetting record with the Stripe customer ID
-func updateOrganizationSettingWithCustomerID(orgID, customerID string) error {
-	client := entgen.FromContext(context.Background())
-	err := client.Organization.UpdateOneID(orgID).SetTags([]string{customerID}).Exec(context.Background())
+func updateOrganizationSettingWithCustomerID(orgID, customerID string, dbclient *entgen.Client) error {
+	_, err := dbclient.OrganizationSetting.UpdateOneID(orgID).SetStripeID(customerID).Save(context.Background())
 	if err != nil {
 		log.Err(err).Msgf("Failed to update OrganizationSetting ID %s with Stripe customer ID %s", orgID, customerID)
 		return err

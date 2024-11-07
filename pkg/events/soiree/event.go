@@ -1,6 +1,9 @@
 package soiree
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 // Event is an interface representing the structure of an instance of an event
 type Event interface {
@@ -18,6 +21,10 @@ type Event interface {
 	SetAborted(bool)
 	// IsAborted checks the event's aborted status
 	IsAborted() bool
+	// Context returns the event's context
+	Context() context.Context
+	// SetContext sets the event's context
+	SetContext(context.Context)
 }
 
 // BaseEvent serves as a basic implementation of the `Event` interface and contains fields for storing the topic,
@@ -31,6 +38,7 @@ type BaseEvent struct {
 	aborted    bool
 	properties Properties
 	mu         sync.RWMutex
+	ctx        context.Context
 }
 
 // NewBaseEvent creates a new instance of BaseEvent with a payload
@@ -124,4 +132,19 @@ func (p Properties) GetKey(key string) interface{} {
 	}
 
 	return value
+}
+
+// Context returns the event's context
+func (e *BaseEvent) Context() context.Context {
+	e.mu.RLock() // Read lock
+	defer e.mu.RUnlock()
+
+	return e.ctx
+}
+
+// SetContext sets the event's context
+func (e *BaseEvent) SetContext(ctx context.Context) {
+	e.mu.Lock() // Write lock
+	defer e.mu.Unlock()
+	e.ctx = ctx
 }
