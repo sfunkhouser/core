@@ -130,7 +130,7 @@ func New(ctx context.Context, c entx.Config, jobOpts []riverqueue.Option, opts .
 	db.Intercept(interceptors.QueryLogger())
 
 	// Register the global hooks
-	pool := hooks.InitEventPool()
+	pool := hooks.InitEventPool(db)
 	hooks.RegisterGlobalHooks(db, pool)
 	hooks.RegisterListeners(pool)
 

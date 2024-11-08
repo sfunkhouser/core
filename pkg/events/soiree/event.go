@@ -25,6 +25,10 @@ type Event interface {
 	Context() context.Context
 	// SetContext sets the event's context
 	SetContext(context.Context)
+	// Client returns the event's client
+	Client() interface{}
+	// SetClient sets the event's client
+	SetClient(interface{})
 }
 
 // BaseEvent serves as a basic implementation of the `Event` interface and contains fields for storing the topic,
@@ -39,6 +43,7 @@ type BaseEvent struct {
 	properties Properties
 	mu         sync.RWMutex
 	ctx        context.Context
+	client     interface{}
 }
 
 // NewBaseEvent creates a new instance of BaseEvent with a payload
@@ -147,4 +152,20 @@ func (e *BaseEvent) SetContext(ctx context.Context) {
 	e.mu.Lock() // Write lock
 	defer e.mu.Unlock()
 	e.ctx = ctx
+}
+
+// Client returns the event's client
+func (e *BaseEvent) Client() interface{} {
+	e.mu.RLock() // Read lock
+	defer e.mu.RUnlock()
+
+	return e.client
+}
+
+// SetClient sets the event's client
+func (e *BaseEvent) SetClient(client interface{}) {
+	e.mu.Lock() // Write lock
+	defer e.mu.Unlock()
+
+	e.client = client
 }

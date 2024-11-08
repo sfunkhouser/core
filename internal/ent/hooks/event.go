@@ -64,6 +64,7 @@ func EmitEventHook(pool *soiree.EventPool) ent.Hook {
 			}
 
 			event.SetContext(context.WithoutCancel(ctx))
+			event.SetClient(pool.GetClient())
 
 			pool.Emit(event.Topic(), event)
 			log.Info().Msgf("Emitted event: %s", event.Topic())
@@ -80,7 +81,7 @@ func RegisterGlobalHooks(client *entgen.Client, pool *soiree.EventPool) {
 
 var EntEventPool *soiree.EventPool
 
-func InitEventPool() *soiree.EventPool {
+func InitEventPool(client interface{}) *soiree.EventPool {
 	customErrorHandler := func(event soiree.Event, err error) error {
 		log.Printf("Error encountered during event '%s': %v, with payload: %v", event.Topic(), err, event.Payload())
 
@@ -89,7 +90,7 @@ func InitEventPool() *soiree.EventPool {
 
 	entpool := soiree.NewNamedPondPool(100, "ent_event_pool") // nolint:mnd
 
-	EntEventPool = soiree.NewEventPool(soiree.WithPool(entpool), soiree.WithErrorHandler(customErrorHandler))
+	EntEventPool = soiree.NewEventPool(soiree.WithPool(entpool), soiree.WithErrorHandler(customErrorHandler), soiree.WithClient(client))
 
 	log.Info().Msg("Initialized EntEventPool")
 
@@ -176,7 +177,7 @@ func handleCustomerCreate(event soiree.Event) error {
 
 			log.Info().Msgf("Created Stripe customer with ID: %s", customer.ID)
 
-			if err := updateOrganizationSettingWithCustomerID(event.Context(), orgsettingID.(string), customer.ID); err != nil {
+			if err := updateOrganizationSettingWithCustomerID(event.Context(), orgsettingID.(string), customer.ID, event.Client()); err != nil {
 				log.Err(err).Msg("Failed to update OrganizationSetting with Stripe customer ID")
 				return err
 			}
@@ -190,8 +191,10 @@ func handleCustomerCreate(event soiree.Event) error {
 	return nil
 }
 
-func updateOrganizationSettingWithCustomerID(ctx context.Context, orgID, customerID string) error {
-	if _, err := entgen.FromContext(ctx).OrganizationSetting.UpdateOneID(orgID).SetStripeID(customerID).Save(ctx); err != nil {
+func updateOrganizationSettingWithCustomerID(ctx context.Context, orgID, customerID string, client interface{}) error {
+	entClient := client.(*entgen.Client)
+
+	if _, err := entClient.OrganizationSetting.UpdateOneID(orgID).SetStripeID(customerID).Save(ctx); err != nil {
 		log.Err(err).Msgf("Failed to update OrganizationSetting ID %s with Stripe customer ID %s", orgID, customerID)
 
 		return err
