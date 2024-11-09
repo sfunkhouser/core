@@ -1,11 +1,11 @@
 package entitlements
 
-import (
-	ripe "github.com/theopenlane/core/pkg/entitlements/stripe"
-)
-
 type Config struct {
 	Enabled bool `json:"enabled" koanf:"enabled" default:"false"`
-	// StripeConfig is the configuration for the stripe service
-	StripeConfig ripe.Config
+	// PublicStripeKey is the key for the stripe service
+	PublicStripeKey string `json:"publicStripeKey" koanf:"publicStripeKey" default:""`
+	// PrivateStripeKey is the key for the stripe service
+	PrivateStripeKey string `json:"privateStripeKey" koanf:"privateStripeKey" default:""`
+	// StripeWebhookSecret is the secret for the stripe service
+	StripeWebhookSecret string `json:"stripeWebhookSecret" koanf:"stripeWebhookSecret" default:""`
 }

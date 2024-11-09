@@ -12,6 +12,7 @@ import (
 	scust "github.com/stripe/stripe-go/v81/customer"
 
 	entgen "github.com/theopenlane/core/internal/ent/generated"
+	"github.com/theopenlane/core/internal/ent/generated/organizationsetting"
 	"github.com/theopenlane/core/pkg/events/soiree"
 )
 
@@ -48,7 +49,9 @@ func EmitEventHook(pool *soiree.EventPool) ent.Hook {
 			}
 
 			other := Output{}
-			json.Unmarshal(out, &other)
+			if err := json.Unmarshal(out, &other); err != nil {
+				log.Err(err).Msg("Failed to unmarshal return value")
+			}
 
 			event := NewEntEvent(fmt.Sprintf("%s.%s", typ, op), mutation)
 
@@ -85,7 +88,7 @@ func InitEventPool(client interface{}) *soiree.EventPool {
 	customErrorHandler := func(event soiree.Event, err error) error {
 		log.Printf("Error encountered during event '%s': %v, with payload: %v", event.Topic(), err, event.Payload())
 
-		return nil // Returning nil to indicate that the error has been swallowed
+		return nil
 	}
 
 	entpool := soiree.NewNamedPondPool(100, "ent_event_pool") // nolint:mnd
@@ -140,7 +143,7 @@ func handleCustomerCreate(event soiree.Event) error {
 	stripe.Key = ""
 
 	props := event.Properties()
-	// this map is empty?
+
 	log.Info().Msgf("Event properties from listener: %v", props)
 
 	orgsettingID, exists := props["ID"]
@@ -151,8 +154,43 @@ func handleCustomerCreate(event soiree.Event) error {
 
 	log.Info().Msgf("OrganizationSetting ID: %s", orgsettingID)
 
-	billingEmail, exists := props["billing_email"]
+	orgSetting, err := fetchOrganizationSettingbyID(event.Context(), orgsettingID.(string), event.Client())
+	if err != nil {
+		log.Err(err).Msg("Failed to fetch OrganizationSetting")
+		return err
+	}
 
+	log.Info().Msgf("OrganizationSetting: %v", orgSetting)
+
+	if orgSetting.StripeID != "" {
+		log.Info().Msgf("OrganizationSetting already has Stripe ID: %s, confirming email on OrganizationSettings matches stripe...", orgSetting.StripeID)
+
+		stripecustomer, err := scust.Get(orgSetting.StripeID, nil)
+		if err != nil {
+			log.Err(err).Msg("Failed to retrieve Stripe customer by ID")
+			return err
+		}
+
+		log.Info().Msgf("Retrieved Stripe customer: %v", stripecustomer)
+
+		if stripecustomer.Email != orgSetting.BillingEmail {
+			log.Warn().Msgf("The email received back from the stripe ID on this record does not match the email in the event properties! Updating...")
+
+			_, err := scust.Update(orgSetting.StripeID, &stripe.CustomerParams{
+				Email: &orgSetting.BillingEmail,
+			})
+			if err != nil {
+				log.Err(err).Msg("Failed to update Stripe customer email")
+				return err
+			}
+
+			log.Info().Msg("Updated Stripe customer email")
+		}
+
+		return nil
+	}
+
+	billingEmail, exists := props["billing_email"]
 	if exists && billingEmail != "" {
 		log.Info().Msgf("Billing email: %s", billingEmail)
 		email := billingEmail.(string)
@@ -191,6 +229,19 @@ func handleCustomerCreate(event soiree.Event) error {
 	return nil
 }
 
+func fetchOrganizationSettingbyID(ctx context.Context, orgID string, client interface{}) (*entgen.OrganizationSetting, error) {
+	entClient := client.(*entgen.Client)
+
+	orgsetting, err := entClient.OrganizationSetting.Query().Where(organizationsetting.ID(orgID)).Only(ctx)
+	if err != nil {
+		log.Err(err).Msgf("Failed to fetch OrganizationSetting ID %s", orgID)
+
+		return nil, err
+	}
+
+	return orgsetting, nil
+}
+
 func updateOrganizationSettingWithCustomerID(ctx context.Context, orgID, customerID string, client interface{}) error {
 	entClient := client.(*entgen.Client)
 
@@ -203,31 +254,4 @@ func updateOrganizationSettingWithCustomerID(ctx context.Context, orgID, custome
 	log.Info().Msgf("Updated OrganizationSetting ID %s with Stripe customer ID %s", orgID, customerID)
 
 	return nil
-}
-
-func CreateStripeCustomerIfNotExists(name, email string) error {
-	customerParams := &stripe.CustomerParams{
-		Email: &email,
-		Name:  &name,
-	}
-
-	_, err := scust.New(customerParams)
-	if err != nil {
-		log.Printf("Failed to create Stripe customer: %v", err)
-	}
-
-	return nil
-}
-
-func MapMutationFieldsToProperties(mutation ent.Mutation) soiree.Properties {
-	properties := soiree.Properties{}
-
-	for _, field := range mutation.Fields() {
-		value, exists := mutation.Field(field)
-		if exists {
-			properties[field] = value
-		}
-	}
-
-	return properties
 }

@@ -185,12 +185,10 @@ sessions:
     encryptionKey: encryptionsecret
     signingKey: my-signing-secret
 subscription:
-    StripeConfig:
-        enabled: false
-        privateStripeKey: ""
-        publicStripeKey: ""
-        stripeWebhookSecret: ""
     enabled: false
+    privateStripeKey: ""
+    publicStripeKey: ""
+    stripeWebhookSecret: ""
 totp:
     codeLength: 6
     enabled: true

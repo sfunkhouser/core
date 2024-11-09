@@ -650,17 +650,6 @@ Config defines the configuration settings for the default rate limiter
 |Name|Type|Description|Required|
 |----|----|-----------|--------|
 |**enabled**|`boolean`|||
-|[**StripeConfig**](#subscriptionstripeconfig)|`object`|||
-
-**Additional Properties:** not allowed  
-<a name="subscriptionstripeconfig"></a>
-### subscription\.StripeConfig: object
-
-**Properties**
-
-|Name|Type|Description|Required|
-|----|----|-----------|--------|
-|**enabled**|`boolean`|||
 |**publicStripeKey**|`string`|||
 |**privateStripeKey**|`string`|||
 |**stripeWebhookSecret**|`string`|||
