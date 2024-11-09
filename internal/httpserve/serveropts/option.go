@@ -459,7 +459,7 @@ func WithObjectStorage() ServerOption {
 func WithEntitlements() ServerOption {
 	return newApplyFunc(func(s *ServerOptions) {
 		if s.Config.Settings.Entitlements.Enabled {
-			client := entitlements.NewStripeClient()
+			client := entitlements.NewStripeClient(entitlements.WithAPIKey(s.Config.Settings.Entitlements.PrivateStripeKey))
 
 			s.Config.Handler.Entitlements = client
 		}

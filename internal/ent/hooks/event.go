@@ -9,7 +9,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/stripe/stripe-go/v81"
-	scust "github.com/stripe/stripe-go/v81/customer"
 
 	entgen "github.com/theopenlane/core/internal/ent/generated"
 	"github.com/theopenlane/core/internal/ent/generated/organizationsetting"
@@ -140,8 +139,6 @@ func RegisterListeners(pool *soiree.EventPool) {
 func handleCustomerCreate(event soiree.Event) error {
 	log.Info().Msg("Handling organization create event")
 
-	stripe.Key = ""
-
 	props := event.Properties()
 
 	log.Info().Msgf("Event properties from listener: %v", props)
@@ -165,7 +162,7 @@ func handleCustomerCreate(event soiree.Event) error {
 	if orgSetting.StripeID != "" {
 		log.Info().Msgf("OrganizationSetting already has Stripe ID: %s, confirming email on OrganizationSettings matches stripe...", orgSetting.StripeID)
 
-		stripecustomer, err := scust.Get(orgSetting.StripeID, nil)
+		stripecustomer, err := event.Client().(*entgen.Client).EntitlementManager.Client.Customers.Get(orgSetting.StripeID, nil)
 		if err != nil {
 			log.Err(err).Msg("Failed to retrieve Stripe customer by ID")
 			return err
@@ -176,7 +173,7 @@ func handleCustomerCreate(event soiree.Event) error {
 		if stripecustomer.Email != orgSetting.BillingEmail {
 			log.Warn().Msgf("The email received back from the stripe ID on this record does not match the email in the event properties! Updating...")
 
-			_, err := scust.Update(orgSetting.StripeID, &stripe.CustomerParams{
+			_, err := event.Client().(*entgen.Client).EntitlementManager.Client.Customers.Update(orgSetting.StripeID, &stripe.CustomerParams{
 				Email: &orgSetting.BillingEmail,
 			})
 			if err != nil {
@@ -198,7 +195,7 @@ func handleCustomerCreate(event soiree.Event) error {
 			Email: &email,
 		}
 
-		i := scust.List(customerParams)
+		i := event.Client().(*entgen.Client).EntitlementManager.Client.Customers.List(customerParams)
 
 		if !i.Next() {
 			log.Info().Msgf("Attempting to create Stripe customer with email %s", email)
@@ -207,7 +204,7 @@ func handleCustomerCreate(event soiree.Event) error {
 				Email: &email,
 			}
 
-			customer, err := scust.New(customerParams)
+			customer, err := event.Client().(*entgen.Client).EntitlementManager.Client.Customers.New(customerParams)
 			if err != nil {
 				log.Err(err).Msg("Failed to create Stripe customer")
 				return err
@@ -230,9 +227,7 @@ func handleCustomerCreate(event soiree.Event) error {
 }
 
 func fetchOrganizationSettingbyID(ctx context.Context, orgID string, client interface{}) (*entgen.OrganizationSetting, error) {
-	entClient := client.(*entgen.Client)
-
-	orgsetting, err := entClient.OrganizationSetting.Query().Where(organizationsetting.ID(orgID)).Only(ctx)
+	orgsetting, err := client.(*entgen.Client).OrganizationSetting.Query().Where(organizationsetting.ID(orgID)).Only(ctx)
 	if err != nil {
 		log.Err(err).Msgf("Failed to fetch OrganizationSetting ID %s", orgID)
 
@@ -243,9 +238,7 @@ func fetchOrganizationSettingbyID(ctx context.Context, orgID string, client inte
 }
 
 func updateOrganizationSettingWithCustomerID(ctx context.Context, orgID, customerID string, client interface{}) error {
-	entClient := client.(*entgen.Client)
-
-	if _, err := entClient.OrganizationSetting.UpdateOneID(orgID).SetStripeID(customerID).Save(ctx); err != nil {
+	if _, err := client.(*entgen.Client).OrganizationSetting.UpdateOneID(orgID).SetStripeID(customerID).Save(ctx); err != nil {
 		log.Err(err).Msgf("Failed to update OrganizationSetting ID %s with Stripe customer ID %s", orgID, customerID)
 
 		return err

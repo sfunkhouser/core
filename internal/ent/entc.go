@@ -19,11 +19,12 @@ import (
 	"github.com/theopenlane/entx"
 	"github.com/theopenlane/entx/genhooks"
 	"github.com/theopenlane/entx/history"
+	"github.com/theopenlane/iam/sessions"
+	"github.com/theopenlane/iam/tokens"
 	"github.com/theopenlane/iam/totp"
 
 	"github.com/theopenlane/core/internal/ent/entconfig"
-	"github.com/theopenlane/iam/sessions"
-	"github.com/theopenlane/iam/tokens"
+	"github.com/theopenlane/core/pkg/entitlements"
 
 	_ "github.com/jackc/pgx/v5"
 )
@@ -106,6 +107,10 @@ func main() {
 		entc.Dependency(
 			entc.DependencyName("TOTP"),
 			entc.DependencyType(&totp.Manager{}),
+		),
+		entc.Dependency(
+			entc.DependencyName("EntitlementManager"),
+			entc.DependencyType(&entitlements.StripeClient{}),
 		),
 		entc.TemplateDir("./internal/ent/templates"),
 		entc.Extensions(
